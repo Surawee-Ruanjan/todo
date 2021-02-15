@@ -8,6 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "next": "10.0.6",
     "react": "17.0.1",
     "react-dom": "17.0.1"

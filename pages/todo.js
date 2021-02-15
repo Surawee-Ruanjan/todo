@@ -1,88 +1,146 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import styles from '../styles/Todo.module.css'
 
-const Todo = () => {
+const Todo = ({ avatar_url, login }) => {
 
-    const [tasks, setTasks] = useState(
-        [
-            { id: 1, name: 'Reading a book' },
-            { id: 2, name: 'Sleep at night' }
-        ])
+    const [firstnames, setFirstnames] = useState([])
+    // { id: 1, name: 'Do homework' },
+    // { id: 2, name: 'Read book' }])
+
+    const [age, setAge] = useState('')
 
     const [name, setName] = useState('')
+
     const [idEdit, setIdEdit] = useState(0)
 
-    const renderTask = () => {
-        return tasks.map((task, index) =>
-        (<li key={index} className={styles.listItem}>
-            {index + 1} {(+idEdit !== +task.id) ?
-                task.name :
-                (<input type="text"
-                    name="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />)
-            }
-            <div className={styles.buttonContainer}>
-                <button
-                    className={`${styles.button} ${styles.btnEdit}`}
-                    onClick={() => editTask(task.id)}>Edit</button>
-                <button
-                    className={`${styles.button} ${styles.btnDelete}`}
-                    onClick={() => deleteTask(task.id)}>Delete</button>
-            </div>
-        </li>)
-        )
+    useEffect(async () => {
+        let ts = await getFirstnames();
+        console.log(ts)
+        setFirstnames(ts)
+    }, [])
+
+
+    const renderFirstnames = () => {
+        if (firstnames && firstnames.length)
+            return firstnames.map((firstname, index) => (
+                <li key={index} className={styles.listItem}>
+                    {firstname.id})
+                    {(idEdit !== firstname.id) ?
+                        firstname.name :
+                        (<input
+                            className={styles.text}
+                            type="text"
+                            name="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />)
+                    }
+                    <br></br>&nbsp; &nbsp; Age : &nbsp;{
+                        (idEdit !== firstname.id) ?
+                            firstname.age : (
+                                <input
+                                    className={styles.text}
+                                    type="text"
+                                    name="age"
+                                    value={age}
+                                    onChange={(e) => (setAge(e.target.value))}
+                                />)
+                    }
+                    <div className={styles.buttonContainer}>
+                        <button
+                            className={`${styles.button} ${styles.btnEdit}`}
+                            onClick={() => editFirstname(firstname.id)}>
+                            Edit
+                       </button>
+                        <button
+                            className={`${styles.button} ${styles.btnDelete}`}
+                            onClick={() => deleteFirstname(firstname.id)}>
+                            Delete
+                       </button>
+                    </div>
+                </li>))
     }
 
-    const editTask = (id) => {
+    const editFirstname = (id) => {
         setIdEdit(id)
-        let t = tasks.find((task) => +task.id === +id)
+        let t = firstnames.find((firstname) => +firstname.id === +id)
         setName(t.name)
-        if (+idEdit === +id) {
-            let newTasks = tasks.map((task, index) => {
-                if (+task.id === +id)
-                    tasks[index].name = name
-                return task
+        setAge(t.age)
+        if (+idEdit === +id) { //Press Edit again
+            let newFirstnames = firstnames.map((firstname, index) => {
+                if (+firstname.id === +id){
+                    firstnames[index].name = name
+                    firstnames[index].age = age
+                }
+                //  console.log("show =>", firstname)
+                return firstname
             })
-            setTasks(newTasks)
+            setFirstnames(newFirstnames)
             setIdEdit(0)
         }
     }
 
-    const deleteTask = (id) => {
-        console.log('Delete', id)
-        let newTasks = tasks.filter((task) => task.id !== +id)
-        setTasks(newTasks)
+    const deleteFirstname = (id) => {
+        console.log('delete id: ', id)
+        let newFirstnames = firstnames.filter((firstname) => firstname.id !== +id)
+        setFirstnames(newFirstnames)
+    }
 
+    const addFirstname = (name) => {
+        setFirstnames([...firstnames, { id: firstnames[firstnames.length - 1].id + 1, name, age }])
+        console.log(firstnames)
     }
-    const addTask = () => {
-        const id = tasks[tasks.length - 1].id + 1;
-        if (tasks.length <= 9 && name !== '') {
-            setTasks([...tasks, { id, name }])
-        }
-    }
+
     return (
         <div className={styles.container}>
-            <h1 className={styles.title}>Todo</h1>
+            <div className={styles.topRight}>
+                <Link href="/"><a>Home</a></Link>
+            </div>
+            <h1 className={styles.title}>
+
+                <img src={avatar_url} width="80" />
+                Todo  for <span>{login} </span>
+
+            </h1>
 
             <div className="addContainer">
                 <input
                     className={styles.text}
+                    placeholder="Name"
                     type="text"
-                    onChange={(e) => setName(e.target.value)}
+                    name="addFirstname"
+                    onChange={(e) => (setName(e.target.value))}
+                />
+                <input
+                    className={styles.text}
+                    placeholder="Enter age"
+                    type="text"
+                    name="addAge"
+                    onChange={(e) => (setAge(e.target.value))}
                 />
                 <button
                     className={`${styles.button} ${styles.btnAdd}`}
-                    onClick={addTask}>Add</button>
+                    onClick={() => addFirstname(name)}>Add</button>
             </div>
             <ul className={styles.list}>
-                {
-                    renderTask()
-                }
+                {renderFirstnames()}
             </ul>
         </div>
     )
-
 }
+
+const getFirstnames = async () => {
+    const res = await fetch('http://localhost:8000/')
+    const json = await res.json()
+    console.log(json)
+    return json;
+}
+
+Todo.getInitialProps = async (ctx) => {
+    const res = await fetch('https://api.github.com/users/Surawee-Ruanjan')
+    const json = await res.json()
+    return { login: json.login, avatar_url: json.avatar_url }
+}
+
 export default Todo
